@@ -1,9 +1,37 @@
+const startupDebugger = require('debug')('app:startup');
+const dbDebugger = require('debug')('app:db');
+const config = require('config');
+const morgan = require('morgan');
+const helmet = require('helmet');
 const Joi = require('joi');
+const logger = require('./logger');
 const express = require('express');
 const func = require('joi/lib/types/func');
 const app = express();
 
+app.set('view engine', 'pug');
+
+
 app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+app.use(express.static('public'));
+app.use(helmet());
+
+//Configuration
+console.log('Application Name: ' + config.get('name'));
+console.log('Mail Server: ' + config.get('mail.host'));
+console.log('Mail Password: ' + config.get('mail.password'));
+
+
+if(app.get('env')=== 'development'){
+    app.use(morgan('tiny'));
+    startupDebugger('Morgan enabled...');
+}
+
+
+app.use(logger);
+
+
 
 const courses = [
     {id: 1, name: 'course1'},
@@ -12,7 +40,7 @@ const courses = [
 ];
 
 app.get('/', (req, res)=>{
-    res.send('Hello World!!!');
+    res.render('index', {title: 'My express App', message: 'Hello'})
 });
 
 app.get('/api/courses', (req, res)=> {
